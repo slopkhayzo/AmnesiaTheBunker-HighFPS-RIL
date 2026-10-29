@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     AmnesiaTheBunkerFpsFix
-    VERSION 1.0.0
+    VERSION 1.1.0
     DESCRIPTION "High-frame-rate presentation fix for Amnesia: The Bunker"
     LANGUAGES C CXX
 )
@@ -11,6 +11,8 @@ include(CTest)
 
 set(ATB_GAME_EXE "" CACHE FILEPATH
     "Optional AmnesiaTheBunker.exe path for the read-only installed-target test")
+set(ATB_STEAM_GAME_EXE "" CACHE FILEPATH
+    "Optional Steam AmnesiaTheBunker.exe path for the same read-only test")
 option(ATB_BUILD_DEV_LAUNCHER
     "Build the non-release x64 development launcher/injector" ON)
 
@@ -425,10 +427,7 @@ if(BUILD_TESTING)
         )
     endif()
 
-    if(ATB_GAME_EXE)
-        if(NOT EXISTS "${ATB_GAME_EXE}")
-            message(FATAL_ERROR "ATB_GAME_EXE does not exist: ${ATB_GAME_EXE}")
-        endif()
+    if(ATB_GAME_EXE OR ATB_STEAM_GAME_EXE)
         add_executable(installed_target_tests
             tests/installed_target_tests.cpp
             src/runtime_mapping.cpp
@@ -437,9 +436,24 @@ if(BUILD_TESTING)
         )
         atb_test(installed_target_tests)
         target_link_libraries(installed_target_tests PRIVATE bcrypt)
+    endif()
+    if(ATB_GAME_EXE)
+        if(NOT EXISTS "${ATB_GAME_EXE}")
+            message(FATAL_ERROR "ATB_GAME_EXE does not exist: ${ATB_GAME_EXE}")
+        endif()
         add_test(
             NAME installed_target_identity_and_mapping
             COMMAND installed_target_tests "${ATB_GAME_EXE}"
+        )
+    endif()
+    if(ATB_STEAM_GAME_EXE)
+        if(NOT EXISTS "${ATB_STEAM_GAME_EXE}")
+            message(FATAL_ERROR
+                "ATB_STEAM_GAME_EXE does not exist: ${ATB_STEAM_GAME_EXE}")
+        endif()
+        add_test(
+            NAME installed_steam_target_identity_and_mapping
+            COMMAND installed_target_tests "${ATB_STEAM_GAME_EXE}"
         )
     endif()
 endif()

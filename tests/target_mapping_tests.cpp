@@ -57,6 +57,30 @@ int main() {
     Require(atb::target::MatchKnownBuild(supported, L"", build, error) &&
                 !build.verified,
             "a missing hash should not reject the host");
+
+    // Steam's AmnesiaTheBunker.exe is a separate compile with its own mapping
+    // set, chosen by its PE identity; the hash only decides `verified`.
+    atb::target::HostImage steam{};
+    steam.machine = IMAGE_FILE_MACHINE_AMD64;
+    steam.timeDateStamp = 0x65A52182U;
+    steam.imageSize = 0x00A23000U;
+    constexpr wchar_t steamHash[] =
+        L"0ff4a67d332fe8490f69d3a8219bacef120195729a7fcd62b1399455256ae519";
+    error.clear();
+    Require(atb::target::MatchKnownBuild(steam, steamHash, build, error) &&
+                build.id == atb::target::BuildId::steam_13346472 &&
+                build.verified,
+            "the Steam executable identity should select the Steam mapping");
+    Require(atb::target::MatchKnownBuild(steam, expectedHash, build, error) &&
+                build.id == atb::target::BuildId::steam_13346472 &&
+                !build.verified,
+            "a Steam-shaped executable with another hash should be unverified");
+    steam.imageSize += 0x1000U;
+    Require(atb::target::MatchKnownBuild(steam, steamHash, build, error) &&
+                build.id == atb::target::BuildId::gog_57301760292462330 &&
+                !build.verified,
+            "an executable that is not Steam-shaped falls back to the GOG set");
+
     supported.machine = IMAGE_FILE_MACHINE_I386;
     Require(!atb::target::MatchKnownBuild(supported, expectedHash, build, error) &&
                 build.id == atb::target::BuildId::unknown && !error.empty(),

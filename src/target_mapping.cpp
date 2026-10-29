@@ -30,6 +30,12 @@ constexpr std::uint32_t kGogBuildTimestamp = 0x65A5248AU;
 constexpr std::uint32_t kGogBuildImageSize = 0x009F0000U;
 constexpr std::wstring_view kGogBuildSha256 =
     L"377664BA3E6FC84D4F9B04A75A1534868467106E7135FA951167E2C223C2DBD5";
+// Steam's AmnesiaTheBunker.exe. Its AmnesiaTheBunker_NoSteam.exe is
+// byte-for-byte the GOG executable.
+constexpr std::uint32_t kSteamBuildTimestamp = 0x65A52182U;
+constexpr std::uint32_t kSteamBuildImageSize = 0x00A23000U;
+constexpr std::wstring_view kSteamBuildSha256 =
+    L"0FF4A67D332FE8490F69D3A8219BACEF120195729A7FCD62B1399455256AE519";
 
 } // namespace
 
@@ -131,6 +137,19 @@ bool MatchKnownBuild(const HostImage& image,
         error = L"Known Bunker builds require an AMD64 host";
         return false;
     }
+    if (image.timeDateStamp == kSteamBuildTimestamp &&
+        image.imageSize == kSteamBuildImageSize) {
+        build.id = BuildId::steam_13346472;
+        if (EqualsCaseInsensitive(sha256, kSteamBuildSha256)) {
+            build.name = L"Steam build 13346472 (1.31-era executable)";
+            build.verified = true;
+            return true;
+        }
+        build.name = L"an executable laid out like Steam build 13346472 but "
+                     L"not identical to it; each feature is decided by its "
+                     L"code signatures";
+        return true;
+    }
     build.id = BuildId::gog_57301760292462330;
     if (image.timeDateStamp == kGogBuildTimestamp &&
         image.imageSize == kGogBuildImageSize &&
@@ -139,8 +158,8 @@ bool MatchKnownBuild(const HostImage& image,
         build.verified = true;
         return true;
     }
-    build.name = L"an executable other than the one the fix was developed "
-                 L"on; each feature is decided by its code signatures";
+    build.name = L"an executable other than the known GOG and Steam builds; "
+                 L"each feature is decided by its code signatures";
     return true;
 }
 

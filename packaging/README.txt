@@ -22,10 +22,11 @@ What it smooths
 
 Requirements
 ------------
-- Amnesia: The Bunker for Windows. Developed and tested on the GOG build
-  only. At startup the fix checks the game code it depends on and switches
-  itself off if that code does not match. Other builds, such as Steam, work
-  only if their code is the same; this has not been tested.
+- Amnesia: The Bunker for Windows, GOG or Steam. Developed and tested on
+  the GOG build; the Steam build is supported through its own address table
+  (AmnesiaTheBunker_NoSteam.exe is the GOG executable). At startup the fix
+  checks the game code it depends on and switches itself off if that code
+  does not match, for example after a game update.
 - An x64 ASI loader. It is not included in this archive.
 
 Installation

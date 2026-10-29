@@ -18,7 +18,10 @@ states, so motion is smooth at the display's rate while physics, scripts, AI,
 animation timing, and audio are unchanged. Everything it changes for a frame
 is restored before the simulation runs again.
 
-## What `1.0.0` covers
+## What `1.1.0` covers
+
+`1.1.0` adds the Steam build (see Compatibility); the features are those of
+`1.0.0`:
 
 - Render unlock: the engine's own `LimitFPS` gate is cleared so drawing is no
   longer tied to the gameplay update rate.
@@ -50,14 +53,25 @@ room for only one or two frames, so the frame rate then stays between 120 and
 
 ## Compatibility
 
-Developed and tested on the GOG build only (`AmnesiaTheBunker.exe`, SHA-256
-`377664BA3E6FC84D4F9B04A75A1534868467106E7135FA951167E2C223C2DBD5`). The
-executable hash is logged but does not gate the fix: on any other x64
-executable the known mappings are marked unverified, and each one is used only
-if the code at its address matches its signature. Hooks are installed
-transactionally, so a mismatch switches the affected feature (or the whole fix)
-off and records the first failure in the log. Other builds, such as Steam, work
-only if their code is identical; this is untested.
+Developed and tested on the GOG build (`AmnesiaTheBunker.exe`, SHA-256
+`377664BA3E6FC84D4F9B04A75A1534868467106E7135FA951167E2C223C2DBD5`).
+
+The Steam build has two executables. `AmnesiaTheBunker_NoSteam.exe` is
+byte-for-byte the GOG executable. `AmnesiaTheBunker.exe` (Steam build
+13346472, SHA-256
+`0FF4A67D332FE8490F69D3A8219BACEF120195729A7FCD62B1399455256AE519`) is a
+separate compile of the same code at different addresses, so it has its own
+mapping table. Every mapping in that table was located in the Steam executable
+and cross-checked against the GOG one; the Steam executable has been run in the
+main menu with every feature on, matching the GOG counters, and played with
+every feature on, without warnings or interpolation failures.
+
+The executable hash is logged but does not gate the fix: an executable shaped
+like the Steam build gets the Steam mappings, any other x64 executable the GOG
+ones, marked unverified, and each mapping is used only if the code at its
+address matches its signature. Hooks are installed transactionally, so a
+mismatch switches the affected feature (or the whole fix) off and records the
+first failure in the log.
 
 The game has not been played to the end with this version, and gamepads, mods,
 and custom stories are untested.
@@ -77,8 +91,9 @@ ctest --test-dir build-x64 --output-on-failure
 
 The ASI and the development INI are emitted under `build-x64/bin`.
 
-Set `ATB_GAME_EXE` while configuring to add a read-only test that maps an
-installed executable as an image and validates its identity and signatures:
+Set `ATB_GAME_EXE` (GOG) and/or `ATB_STEAM_GAME_EXE` (Steam) while
+configuring to add a read-only test that maps an installed executable as an
+image and validates its identity and signatures:
 
 ```powershell
 cmake -S . -B build-x64 -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo `

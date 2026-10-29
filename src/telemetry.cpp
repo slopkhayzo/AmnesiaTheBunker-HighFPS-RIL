@@ -3669,6 +3669,17 @@ void HookedSceneRenderAll(void* const scene,
     }
 }
 
+// RVA of a resolved address in the main executable, for the install log:
+// the mapping set, and so the addresses, depend on the executable build.
+std::wstring RvaText(const std::uintptr_t address) {
+    const auto base =
+        reinterpret_cast<std::uintptr_t>(GetModuleHandleW(nullptr));
+    std::wostringstream text;
+    text << L"RVA 0x" << std::uppercase << std::hex << std::setw(8)
+         << std::setfill(L'0') << (address - base);
+    return text.str();
+}
+
 } // namespace
 
 bool Install(const mapping::TelemetryMap& map,
@@ -4223,7 +4234,9 @@ bool Install(const mapping::TelemetryMap& map,
             g_particleInterpolation = true;
             log::Write(log::Level::info,
                        L"ParticleInterpolation armed at the emitter's "
-                       L"per-view graphics update (RVA 0x005A6080): "
+                       L"per-view graphics update (" +
+                           RvaText(map.particleUpdateGraphics) +
+                           L"): "
                        L"particles of emitters simulated in the presented "
                        L"tick are drawn between their last two positions "
                        L"and restored afterwards.");
@@ -4244,7 +4257,9 @@ bool Install(const mapping::TelemetryMap& map,
             log::Write(log::Level::info,
                        L"MouseOverlay armed: the menu and inventory cursor "
                        L"is moved to the current mouse position around each "
-                       L"replay of cImGui's draw list (RVA 0x0047C550) and "
+                       L"replay of cImGui's draw list (" +
+                           RvaText(map.imGuiDraw) +
+                           L") and "
                        L"put back afterwards; hover and clicks stay on the "
                        L"tick.");
         } else {
@@ -4255,9 +4270,13 @@ bool Install(const mapping::TelemetryMap& map,
     }
     if (options.telemetryEnabled) {
         log::Write(log::Level::info,
-                   L"Telemetry installed at steady swap RVA 0x005EC4F0, logic "
-                   L"timer WantUpdate RVA 0x00555600, and updater dispatch RVA "
-                   L"0x0039E900; scheduler phase and LimitFPS use "
+                   L"Telemetry installed at steady swap " +
+                       RvaText(map.steadySwapWrapper) +
+                       L", logic timer WantUpdate " +
+                       RvaText(map.logicTimerWantUpdate) +
+                       L", and updater dispatch " +
+                       RvaText(map.updaterDispatch) +
+                       L"; scheduler phase and LimitFPS use "
                    L"signature-validated mappings.");
     }
     if (options.motionTraceEnabled) {
@@ -4268,8 +4287,9 @@ bool Install(const mapping::TelemetryMap& map,
     }
     if (options.cameraRestoreProbe) {
         log::Write(log::Level::info,
-                   L"CameraRestoreProbe armed around scene RenderAll RVA "
-                   L"0x00424B20: the current-listener pose is staged unchanged, "
+                   L"CameraRestoreProbe armed around scene RenderAll " +
+                       RvaText(map.sceneRenderAll) +
+                       L": the current-listener pose is staged unchanged, "
                    L"then proven camera caches are restored and byte-verified.");
     }
     if (options.cameraInterpolation) {
@@ -4282,12 +4302,18 @@ bool Install(const mapping::TelemetryMap& map,
     if (options.handsTraceEnabled) {
         log::Write(log::Level::info,
                    L"Read-only hands/equipment trace armed at "
-                   L"iLuxEntity::SetMatrix RVA 0x001988E0 and "
-                   L"UpdateEntityAttachment RVA 0x0019BE50, with a pass-through "
-                   L"cSubMeshEntity::GetModelMatrix hook at RVA 0x004460A0 and "
-                   L"a pass-through renderer dual-quaternion palette getter at "
-                   L"RVA 0x004ADAC0, plus the post-call matrix-palette trace at "
-                   L"RVA 0x004ADEB0; renderer-owned objects and both palette "
+                   L"iLuxEntity::SetMatrix " + RvaText(map.entitySetMatrix) +
+                       L" and UpdateEntityAttachment " +
+                       RvaText(map.entityUpdateAttachment) +
+                       L", with a pass-through "
+                       L"cSubMeshEntity::GetModelMatrix hook at " +
+                       RvaText(map.subMeshGetModelMatrix) +
+                       L" and a pass-through renderer dual-quaternion "
+                       L"palette getter at " +
+                       RvaText(map.subMeshGetSkinningPalette) +
+                       L", plus the post-call matrix-palette trace at " +
+                       RvaText(map.subMeshUpdateSkinning) +
+                       L"; renderer-owned objects and both palette "
                    L"representations are observed without modifying state.");
     }
     if (options.handsRenderCopyProbe) {
@@ -4308,14 +4334,17 @@ bool Install(const mapping::TelemetryMap& map,
     if (options.handsPoseRestoreProbe) {
         log::Write(log::Level::info,
                    L"HandsPoseRestoreProbe armed at cMeshEntity palette "
-                   L"update RVA 0x00334400: the proven 23-bone first-person "
+                   L"update " + RvaText(map.meshUpdatePalette) +
+                       L": the proven 23-bone first-person "
                    L"palette is reapplied byte-identically only inside its "
                    L"live submesh callback, then restored and verified.");
     }
     if (options.handsPoseRenderCopyProbe) {
         log::Write(log::Level::info,
                    L"HandsPoseRenderCopyProbe armed at the renderer-facing "
-                   L"dual-quaternion getter RVA 0x004ADAC0: only the proven "
+                   L"dual-quaternion getter " +
+                       RvaText(map.subMeshGetSkinningPalette) +
+                       L": only the proven "
                    L"near 23-bone palette is returned from byte-identical "
                    L"plugin-owned storage; game state is not written.");
     }

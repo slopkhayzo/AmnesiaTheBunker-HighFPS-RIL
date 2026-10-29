@@ -25,6 +25,7 @@ struct HostImage {
 enum class BuildId : std::uint32_t {
     unknown,
     gog_57301760292462330,
+    steam_13346472,
 };
 
 struct KnownBuild {
@@ -40,8 +41,9 @@ struct KnownBuild {
                                      HostImage& image,
                                      std::wstring& error) noexcept;
 // Chooses the mapping set for a host. The executable's hash is evidence,
-// not a gate: any AMD64 host gets the known mapping set, and each mapping is
-// only used if the code at its address matches its signature.
+// not a gate: any AMD64 host gets a known mapping set (the Steam one when its
+// PE identity is the Steam build's, the GOG one otherwise), and each mapping
+// is only used if the code at its address matches its signature.
 [[nodiscard]] bool MatchKnownBuild(const HostImage& image,
                                    std::wstring_view sha256,
                                    KnownBuild& build,

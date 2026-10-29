@@ -255,6 +255,21 @@ int main() {
                 map.meshUpdatePalette == image.imageBase + meshPaletteRva,
             "the exact frozen hands trace signatures should resolve");
 
+    // The Steam build has its own layout: the GOG bytes at the GOG addresses
+    // must not resolve as Steam.
+    const atb::target::KnownBuild steamBuild{
+        atb::target::BuildId::steam_13346472,
+        L"steam test",
+    };
+    error.clear();
+    Require(!atb::mapping::ResolveTelemetryMap(image, steamBuild, map, error) &&
+                map.steadySwapWrapper == 0 && !error.empty(),
+            "the GOG layout must not resolve as the Steam build");
+    error.clear();
+    Require(!atb::mapping::ResolveHandsTraceMap(image, steamBuild, map, error) &&
+                map.entityUpdateAttachment == 0 && !error.empty(),
+            "the GOG hands layout must not resolve as the Steam build");
+
     mappedImage[entityAttachmentRva + 6] ^= 1U;
     error.clear();
     Require(!atb::mapping::ResolveHandsTraceMap(image, build, map, error) &&
